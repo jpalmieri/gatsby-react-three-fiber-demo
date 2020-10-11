@@ -1,82 +1,37 @@
-import React, { useRef, useState } from "react"
-import { a, useSpring } from "react-spring/three"
-import { Canvas, extend, useRender, useThree } from "react-three-fiber"
-import * as THREE from "three"
-import { OrbitControls } from "three/examples/jsm/controls/OrbitControls"
-import "./style.css"
+import React from "react";
+import { Canvas } from "react-three-fiber";
+import { DoubleSide } from "three";
+import Controls from "../Controls";
+import "./style.css";
 
-extend({ OrbitControls })
-
-const Controls = () => {
-  const orbitRef = useRef()
-  const { camera, gl } = useThree()
-
-  useRender(() => {
-    orbitRef.current.update()
-  })
-
+const PhotoPlane = () => {
   return (
-    <orbitControls
-      autoRotate
-      maxPolarAngle={Math.PI / 3}
-      minPolarAngle={Math.PI / 3}
-      args={[camera, gl.domElement]}
-      ref={orbitRef}
-    />
-  )
-}
-
-const Plane = () => (
-  <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.5, 0]} receiveShadow>
-    <planeBufferGeometry attach="geometry" args={[100, 100]} />
-    <meshPhysicalMaterial attach="material" color="white" />
-  </mesh>
-)
-
-const Box = () => {
-  const [hovered, setHovered] = useState(false)
-  const [active, setActive] = useState(false)
-  const props = useSpring({
-    scale: active ? [1.5, 1.5, 1.5] : [1, 1, 1],
-    color: hovered ? "hotpink" : "gray",
-  })
-
-  return (
-    <a.mesh
-      onPointerOver={() => setHovered(true)}
-      onPointerOut={() => setHovered(false)}
-      onClick={() => setActive(!active)}
-      scale={props.scale}
-      castShadow
-    >
-      <boxBufferGeometry attach="geometry" args={[1, 1, 1]} />
-      <a.meshPhysicalMaterial attach="material" color={props.color} />
-    </a.mesh>
-  )
-}
+    <mesh>
+      <planeGeometry attach="geometry" args={[0.5, 0.5, 16, 16]} />
+      <shaderMaterial
+        attach="material"
+        uniforms={{ uTime: { value: 0 } }}
+        wireframe
+        side={DoubleSide}
+      />
+    </mesh>
+  );
+};
 
 export default () => {
-  const isBrowser = typeof window !== "undefined"
+  const isBrowser = typeof window !== "undefined";
 
   return (
     <>
-      <h1>Hello everyone!</h1>
       {isBrowser && (
-        <Canvas
-          camera={{ position: [0, 0, 5] }}
-          onCreated={({ gl }) => {
-            gl.shadowMap.enabled = true
-            gl.shadowMap.type = THREE.PCFSoftShadowMap
-          }}
-        >
+        <Canvas camera={{ position: [0, 0, 1] }}>
           <ambientLight intensity={0.5} />
           <spotLight position={[15, 20, 5]} penumbra={1} castShadow />
           <fog attach="fog" args={["black", 10, 25]} />
           <Controls />
-          <Box />
-          <Plane />
+          <PhotoPlane />
         </Canvas>
       )}
     </>
-  )
-}
+  );
+};
