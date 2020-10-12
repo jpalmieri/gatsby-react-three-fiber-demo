@@ -9,6 +9,7 @@ precision mediump float;
 varying vec2 vUv;
 varying float vWave;
 uniform float uTime;
+uniform float noiseAmp;
 
 //
 // Description : Array and textureless GLSL 2D/3D/4D simplex
@@ -117,7 +118,6 @@ void main() {
 
   vec3 pos = position;
   float noiseFreq = 3.5;
-  float noiseAmp = 0.15;
   vec3 noisePos = vec3(pos.x * noiseFreq + uTime, pos.y, pos.z);
   pos.z += snoise(noisePos) * noiseAmp;
   vWave = pos.z;
@@ -150,8 +150,17 @@ const PhotoPlane = (props) => {
   gl.setClearColor(0xffffff, 1);
 
   useFrame((state, delta) => {
-    if (mesh.current.material.animating == true) {
+    if (mesh.current.material.uniforms.noiseAmp.value > 0) {
       mesh.current.material.uniforms.uTime.value += delta;
+      if (!mesh.current.material.animating) {
+        mesh.current.material.uniforms.noiseAmp.value -= 0.002;
+      }
+    }
+    if (
+      mesh.current.material.animating &&
+      mesh.current.material.uniforms.noiseAmp.value <= 0.15
+    ) {
+      mesh.current.material.uniforms.noiseAmp.value += 0.002;
     }
   });
 
@@ -170,7 +179,7 @@ const PhotoPlane = (props) => {
       <shaderMaterial
         vertexShader={vert}
         fragmentShader={frag}
-        uniforms={{ uTime: { value: 0.0 } }}
+        uniforms={{ uTime: { value: 0.0 }, noiseAmp: { value: 0.0 } }}
         wireframe
         side={DoubleSide}
       />
