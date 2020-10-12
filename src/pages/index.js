@@ -149,12 +149,23 @@ const PhotoPlane = (props) => {
   const { gl } = useThree();
   gl.setClearColor(0xffffff, 1);
 
-  useFrame(
-    (state, delta) => (mesh.current.material.uniforms.uTime.value += delta)
-  );
+  useFrame((state, delta) => {
+    if (mesh.current.material.animating == true) {
+      mesh.current.material.uniforms.uTime.value += delta;
+    }
+  });
+
+  const setAnimation = (value) => {
+    mesh.current.material.animating = value;
+  };
 
   return (
-    <mesh {...props} ref={mesh}>
+    <mesh
+      {...props}
+      ref={mesh}
+      onPointerOver={() => setAnimation(true)}
+      onPointerOut={() => setAnimation(false)}
+    >
       <planeGeometry args={[0.5, 0.5, 16, 16]} />
       <shaderMaterial
         vertexShader={vert}
