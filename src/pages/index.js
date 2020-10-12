@@ -144,39 +144,41 @@ void main() {
 `;
 
 const PhotoPlane = (props) => {
-  const mesh = useRef();
+  const material = useRef();
 
   const { gl } = useThree();
   gl.setClearColor(0xffffff, 1);
 
   useFrame((state, delta) => {
-    if (mesh.current.material.uniforms.noiseAmp.value > 0) {
-      mesh.current.material.uniforms.uTime.value += delta;
-      if (!mesh.current.material.animating) {
-        mesh.current.material.uniforms.noiseAmp.value -= 0.002;
-      }
+    const { noiseAmp, uTime } = material.current.uniforms;
+    const { animating } = material.current;
+    const rampFactor = 0.002;
+    const noiseMax = 0.15;
+
+    if (noiseAmp.value > 0) {
+      uTime.value += delta;
     }
-    if (
-      mesh.current.material.animating &&
-      mesh.current.material.uniforms.noiseAmp.value <= 0.15
-    ) {
-      mesh.current.material.uniforms.noiseAmp.value += 0.002;
+    if (animating && noiseAmp.value <= noiseMax) {
+      noiseAmp.value += rampFactor;
+    }
+    if (!animating && noiseAmp.value > 0) {
+      noiseAmp.value -= rampFactor;
     }
   });
 
   const setAnimation = (value) => {
-    mesh.current.material.animating = value;
+    material.current.animating = value;
   };
 
   return (
     <mesh
       {...props}
-      ref={mesh}
       onPointerOver={() => setAnimation(true)}
       onPointerOut={() => setAnimation(false)}
     >
       <planeGeometry args={[0.5, 0.5, 16, 16]} />
       <shaderMaterial
+        ref={material}
         vertexShader={vert}
         fragmentShader={frag}
         uniforms={{ uTime: { value: 0.0 }, noiseAmp: { value: 0.0 } }}
