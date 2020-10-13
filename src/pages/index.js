@@ -10,6 +10,7 @@ varying vec2 vUv;
 varying float vWave;
 uniform float uTime;
 uniform float noiseAmp;
+uniform float noiseFreq;
 
 //
 // Description : Array and textureless GLSL 2D/3D/4D simplex
@@ -117,7 +118,6 @@ void main() {
   vUv = uv;
 
   vec3 pos = position;
-  float noiseFreq = 3.5;
   vec3 noisePos = vec3(pos.x * noiseFreq + uTime, pos.y, pos.z);
   pos.z += snoise(noisePos) * noiseAmp;
   vWave = pos.z;
@@ -150,25 +150,40 @@ const PhotoPlane = (props) => {
   gl.setClearColor(0xffffff, 1);
 
   useFrame((state, delta) => {
-    const { noiseAmp, uTime } = material.current.uniforms;
+    const { noiseAmp, noiseFreq, uTime } = material.current.uniforms;
     const { animating } = material.current;
-    const rampFactor = 0.002;
-    const noiseMax = 0.15;
+    const noiseAmpStep = 0.002;
+    const noiseAmpMax = 0.15;
+
+    const noiseFreqMax = 3.5;
+    const noiseFreqStep = 0.02;
 
     if (noiseAmp.value > 0) {
       uTime.value += delta;
     }
-    if (animating && noiseAmp.value <= noiseMax) {
-      noiseAmp.value += rampFactor;
+
+    if (animating && noiseAmp.value <= noiseAmpMax) {
+      noiseAmp.value += noiseAmpStep;
     }
     if (!animating && noiseAmp.value > 0) {
-      noiseAmp.value -= rampFactor;
+      noiseAmp.value -= noiseAmpStep;
+    }
+
+    if (animating && noiseFreq.value <= noiseFreqMax) {
+      noiseFreq.value += noiseFreqStep;
+    }
+    if (!animating && noiseFreq.value > 0) {
+      noiseFreq.value -= noiseFreqStep;
     }
   });
 
   const setAnimation = (value) => {
     material.current.animating = value;
   };
+
+  // useEffect(() => {
+  //   material.current.animating = true;
+  // });
 
   return (
     <mesh
@@ -181,7 +196,11 @@ const PhotoPlane = (props) => {
         ref={material}
         vertexShader={vert}
         fragmentShader={frag}
-        uniforms={{ uTime: { value: 0.0 }, noiseAmp: { value: 0.0 } }}
+        uniforms={{
+          uTime: { value: 0.0 },
+          noiseAmp: { value: 0.0 },
+          noiseFreq: { value: 0.0 },
+        }}
         wireframe
         side={DoubleSide}
       />
