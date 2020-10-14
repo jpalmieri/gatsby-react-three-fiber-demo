@@ -181,10 +181,6 @@ const PhotoPlane = (props) => {
     material.current.animating = value;
   };
 
-  // useEffect(() => {
-  //   material.current.animating = true;
-  // });
-
   return (
     <mesh
       {...props}
